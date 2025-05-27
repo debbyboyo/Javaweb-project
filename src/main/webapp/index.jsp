@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+i<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
@@ -18,19 +18,27 @@
 <input type="radio" name="r1" value="add" />addition
 <br />
 </label>
- 
+
 <label>
 <input type="radio" name="r1" value="sub" />difference
 <br />
 </label>
-       
+
 <label>
 <input type="radio" name="r1" value="sub" />product
 <br />
-</label>       
-       
+</label>
+
+<label>
+<input type="radio" name="r2" value="div" />division
+<br />
+</label>
+
 </div>
 <input type="submit" value="submit" />
 </form>
 </body>
 </html>
+~
+~
+~
