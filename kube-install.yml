@@ -1,0 +1,116 @@
+- name: Install Kubernetes on Amazon Linux 2023
+  hosts: nodes
+  become: true
+
+  vars:
+    k8s_version: "1.28.5"
+    k8s_binaries:
+      - kubeadm
+      - kubelet
+      - kubectl
+
+  tasks:
+    - name: Update packages
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install required packages
+      yum:
+        name:
+          - curl
+          - wget
+          - unzip
+          - git
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+
+    - name: Install AWS CLI
+      shell: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip -o awscliv2.zip
+        sudo ./aws/install
+      args:
+        creates: /usr/local/bin/aws
+
+    - name: Add Docker repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Install Docker
+      yum:
+        name: docker
+        state: present
+
+    - name: Enable and start Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Disable SELinux
+      command: setenforce 0
+      ignore_errors: yes
+
+    - name: Disable swap
+      command: swapoff -a
+
+    - name: Remove swap entry from fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^\s*/swap.*'
+        replace: '# Removed swap by Ansible'
+
+    - name: Download Kubernetes binaries
+      get_url:
+        url: "https://dl.k8s.io/release/v{{ k8s_version }}/bin/linux/amd64/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: '0755'
+      loop: "{{ k8s_binaries }}"
+
+    - name: Create kubelet config directory
+      file:
+        path: /var/lib/kubelet
+        state: directory
+        mode: '0755'
+
+    - name: Create kubelet config file
+      copy:
+        dest: /var/lib/kubelet/config.yaml
+        content: |
+          kind: KubeletConfiguration
+          apiVersion: kubelet.config.k8s.io/v1beta1
+          cgroupDriver: systemd
+
+    - name: Create kubelet systemd service unit
+      copy:
+        dest: /etc/systemd/system/kubelet.service
+        content: |
+          [Unit]
+          Description=kubelet: The Kubernetes Node Agent
+          Documentation=https://kubernetes.io/docs/
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          ExecStart=/usr/local/bin/kubelet --config=/var/lib/kubelet/config.yaml
+          Restart=always
+          StartLimitInterval=0
+          RestartSec=10
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd
+      command: systemctl daemon-reexec
+
+    - name: Enable and start kubelet
+      systemd:
+        name: kubelet
+        enabled: yes
+        state: started
+
+
