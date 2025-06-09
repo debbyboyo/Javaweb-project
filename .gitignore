@@ -113,3 +113,16 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Terraform files to ignore
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+terraform.tfvars
+*.bak
+*.backup
