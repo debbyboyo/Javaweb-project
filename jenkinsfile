@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "calculator-app"
+    }
+
+    stages {
+        stage('Clone') {
+            steps {
+                git branch: 'project-1', url: 'https://github.com/debbyboyo/Javaweb-project.git'
+            }
+        }
+
+        stage('Build WAR') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                sh 'docker run -d -p 8085:8080 --name myapp $IMAGE_NAME'
+            }
+        }
+    }
+}
