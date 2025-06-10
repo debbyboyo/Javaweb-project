@@ -1,6 +1,6 @@
 ---
 - name: Install Kubernetes tools on Workstation
-  hosts: workstation
+  hosts: k8s_master
   become: true
 
   tasks:
