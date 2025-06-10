@@ -1,0 +1,21 @@
+---
+- name: Install Kubernetes tools on Workstation
+  hosts: workstation
+  become: true
+  tasks:
+    - name: Install AWS CLI
+      yum:
+        name: awscli
+        state: present
+
+    - name: Install kubectl
+      get_url:
+        url: https://s3.us-west-2.amazonaws.com/amazon-eks/1.28.5/2023-11-14/bin/linux/amd64/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Install KOPS
+      get_url:
+        url: https://github.com/kubernetes/kops/releases/download/v1.28.0/kops-linux-amd64
+        dest: /usr/local/bin/kops
+        mode: '0755'
