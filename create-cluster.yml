@@ -20,18 +20,18 @@
       line: "{{ item }}"
       create: yes
     loop:
-      - "export KOPS_STATE_STORE=s3://{{ kops_state_bucket }}"
+      - "export KOPS_STATE_STORE=s3://{{ kops-state-bucket }}"
       - "export AWS_DEFAULT_REGION={{ aws_region }}"
 
-  - name: Create Kubernetes cluster with KOPS
+  - name: Create Kubernetes Cluster with KOPS
     shell: |
-      export KOPS_STATE_STORE=s3://{{ kops_state_bucket }}
+      export KOPS_STATE_STORE=s3://{{ kops-state-bucket }}
       export AWS_DEFAULT_REGION={{ aws_region }}
       kops create cluster \
         --name={{ cluster_name }} \
         --dns-zone={{ dns_zone }} \
         --zones={{ zones }} \
-        --state=s3://{{ kops_state_bucket }} \
+        --state=s3://{{ kops-state-bucket }} \
         --node-count={{ node_count }} \
         --node-size={{ node_size }} \
         --control-plane-size={{ control_plane_size }} \
