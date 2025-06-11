@@ -4,10 +4,8 @@
   become: yes
   tasks:
 
-    - name: Set environment variables for KOPS
+    - name: Create Kubernetes cluster with KOPS
       shell: |
-        export KOPS_STATE_STORE=s3://debby-kops-state-store
-        export AWS_DEFAULT_REGION=us-east-2
         kops create cluster \
           --name=debbyboyofinal.com \
           --dns-zone=debbyboyofinal.com \
@@ -18,9 +16,10 @@
           --control-plane-size=t2.small \
           --yes
       environment:
+        KOPS_STATE_STORE: s3://debby-kops-state-store
+        AWS_DEFAULT_REGION: "{{ lookup('env', 'AWS_DEFAULT_REGION') }}"
         AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
         AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
-        AWS_DEFAULT_REGION: "{{ lookup('env', 'AWS_DEFAULT_REGION') }}"
       register: kops_output
 
     - name: Print KOPS output
