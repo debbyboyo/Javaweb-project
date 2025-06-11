@@ -4,7 +4,7 @@
   become: yes
   vars:
     aws_region: "us-east-2"
-    kops_state_bucket: "debby-kops-state-bucket"   
+    kops_state_bucket: "debby-kops-state-bucket"   # ✅ your correct bucket
     dns_zone: "debbyboyofinal.com"
     cluster_name: "debbyboyofinal.com"
     zones: "us-east-2a,us-east-2b"
@@ -13,25 +13,29 @@
     control_plane_size: "t2.small"
 
   tasks:
-
-  - name: Set KOPS and AWS region in bashrc
+  - name: Set KOPS and AWS region in ~/.bashrc
     lineinfile:
-      path: ~/.bashrc
+      path: /home/ec2-user/.bashrc
       line: "{{ item }}"
-      create: yes
+      insertafter: EOF
     loop:
-      - "export KOPS_STATE_STORE=s3://{{ kops-state-bucket }}"
+      - "export KOPS_STATE_STORE=s3://{{ kops_state_bucket }}"
       - "export AWS_DEFAULT_REGION={{ aws_region }}"
+    become_user: ec2-user
+
+  - name: Source ~/.bashrc for environment variables
+    shell: source /home/ec2-user/.bashrc
+    become_user: ec2-user
 
   - name: Create Kubernetes Cluster with KOPS
     shell: |
-      export KOPS_STATE_STORE=s3://{{ kops-state-bucket }}
+      export KOPS_STATE_STORE=s3://{{ kops_state_bucket }}
       export AWS_DEFAULT_REGION={{ aws_region }}
       kops create cluster \
         --name={{ cluster_name }} \
         --dns-zone={{ dns_zone }} \
         --zones={{ zones }} \
-        --state=s3://{{ kops-state-bucket }} \
+        --state=s3://{{ kops_state_bucket }} \
         --node-count={{ node_count }} \
         --node-size={{ node_size }} \
         --control-plane-size={{ control_plane_size }} \
@@ -39,3 +43,4 @@
     environment:
       KOPS_STATE_STORE: "s3://{{ kops_state_bucket }}"
       AWS_DEFAULT_REGION: "{{ aws_region }}"
+    become_user: ec2-user
