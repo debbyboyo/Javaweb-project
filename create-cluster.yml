@@ -1,42 +1,28 @@
 ---
-- name: Create Kubernetes Cluster Using KOPS and Route 53
+- name: Create Kubernetes Cluster using KOPS
   hosts: k8s_master
-  become: true
-
-  vars:
-    cluster_name: debbyboyofinal.com
-    dns_zone: debbyboyofinal.com
-    bucket_name: debby-kops-state-store
-    region: us-east-2
-    zones: us-east-2a,us-east-2b
-    node_count: 2
-    node_size: t2.small
-    master_size: t2.small
-
+  become: yes
   tasks:
-    - name: Set KOPS and AWS environment variables
-      shell: |
-        echo "export KOPS_STATE_STORE=s3://{{ bucket_name }}" >> /home/ec2-user/.bashrc
-        echo "export AWS_DEFAULT_REGION={{ region }}" >> /home/ec2-user/.bashrc
-        export KOPS_STATE_STORE=s3://{{ bucket_name }}
-        export AWS_DEFAULT_REGION={{ region }}
 
-        - name: Create Kubernetes Cluster with KOPS
+    - name: Set environment variables for KOPS
       shell: |
-        export KOPS_STATE_STORE=s3://{{ bucket_name }}
-        export AWS_DEFAULT_REGION={{ region }}
+        export KOPS_STATE_STORE=s3://debby-kops-state-store
+        export AWS_DEFAULT_REGION=us-east-2
         kops create cluster \
-          --name={{ cluster_name }} \
-          --dns-zone={{ dns_zone }} \
-          --zones={{ zones }} \
-          --state=s3://{{ bucket_name }} \
-          --node-count={{ node_count }} \
-          --node-size={{ node_size }} \
-          --control-plane-size={{ master_size }} \
+          --name=debbyboyofinal.com \
+          --dns-zone=debbyboyofinal.com \
+          --zones=us-east-2a,us-east-2b \
+          --state=s3://debby-kops-state-store \
+          --node-count=2 \
+          --node-size=t2.small \
+          --control-plane-size=t2.small \
           --yes
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+        AWS_DEFAULT_REGION: "{{ lookup('env', 'AWS_DEFAULT_REGION') }}"
+      register: kops_output
 
-
-    - name: Validate the Kubernetes Cluster
-      shell: |
-        export KOPS_STATE_STORE=s3://{{ bucket_name }}
-        kops validate cluster --name {{ cluster_name }} --state=s3://{{ bucket_name }} --wait 10m
+    - name: Print KOPS output
+      debug:
+        var: kops_output.stdout_lines
