@@ -10,7 +10,7 @@
           --name=debbyboyofinal.com \
           --dns-zone=debbyboyofinal.com \
           --zones=us-east-2a,us-east-2b \
-          --state=s3://debby-kops-state-store \
+          --state=s3://debby-kops-state-bucket \
           --node-count=2 \
           --node-size=t2.small \
           --control-plane-size=t2.small \
