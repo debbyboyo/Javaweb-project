@@ -1,0 +1,50 @@
+---
+- name: Install Kubernetes tools on Workstation
+  hosts: k8s_worker
+  become: true
+
+  tasks:
+    - name: Download kubectl binary
+      get_url:
+        url: "https://dl.k8s.io/release/v1.28.5/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Download kubeadm binary
+      get_url:
+        url: "https://dl.k8s.io/release/v1.28.5/bin/linux/amd64/kubeadm"
+        dest: /usr/local/bin/kubeadm
+        mode: '0755'
+
+    - name: Download kubelet binary
+      get_url:
+        url: "https://dl.k8s.io/release/v1.28.5/bin/linux/amd64/kubelet"
+        dest: /usr/local/bin/kubelet
+        mode: '0755'
+
+    - name: Enable kubelet systemd service
+      shell: |
+        cat <<EOF | sudo tee /etc/systemd/system/kubelet.service
+        [Unit]
+        Description=kubelet: The Kubernetes Node Agent
+        Documentation=https://kubernetes.io/docs/home/
+        After=network-online.target
+        Wants=network-online.target
+
+        [Service]
+        ExecStart=/usr/local/bin/kubelet
+        Restart=always
+        StartLimitInterval=0
+        RestartSec=10
+
+        [Install]
+        WantedBy=multi-user.target
+        EOF
+      notify: restart kubelet
+
+  handlers:
+    - name: restart kubelet
+      systemd:
+        name: kubelet
+        enabled: yes
+        state: restarted
