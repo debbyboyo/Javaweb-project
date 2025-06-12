@@ -1,62 +1,19 @@
----
-- name: Create Kubernetes Cluster using KOPS
+- name: Create Kubernetes Cluster with Kops
   hosts: k8s_master
-  become: true
-  vars:
-    kops_state_bucket: "debby-kops-state-bucket2"
-    aws_region: "us-east-2"
-    cluster_name: "debbyboyofinal.com"
-    dns_zone: "debbyboyofinal.com"
-    zones: "us-east-2a,us-east-2b"
-    node_count: 2
-    node_size: "t2.small"
-    control_plane_size: "t2.small"
-
+  become: yes
   tasks:
-
-    - name: Create new S3 bucket for KOPS state
+    - name: Set environment variables for Kops and AWS
       shell: |
-        aws s3api create-bucket \
-          --bucket {{ kops_state_bucket }} \
-          --region {{ aws_region }} \
-          --create-bucket-configuration LocationConstraint={{ aws_region }}
-      args:
-        creates: "/tmp/{{ kops_state_bucket }}.created"
-
-    - name: Enable versioning on the S3 bucket
-      shell: |
-        aws s3api put-bucket-versioning \
-          --bucket {{ kops_state_bucket }} \
-          --versioning-configuration Status=Enabled
-
-    - name: Add environment variables to ec2-user bashrc
-      lineinfile:
-        path: /home/ec2-user/.bashrc
-        line: "{{ item }}"
-        insertafter: EOF
-      loop:
-        - "export KOPS_STATE_STORE=s3://{{ kops_state_bucket }}"
-        - "export AWS_DEFAULT_REGION={{ aws_region }}"
-      become_user: ec2-user
-
-    - name: Source .bashrc to apply env variables
-      shell: source /home/ec2-user/.bashrc
-      become_user: ec2-user
-
-    - name: Create Kubernetes Cluster with KOPS
-      shell: |
-        export KOPS_STATE_STORE=s3://{{ kops_state_bucket }}
-        export AWS_DEFAULT_REGION={{ aws_region }}
+        export KOPS_STATE_STORE=s3://debby-kops-final-state-bucket
+        export AWS_DEFAULT_REGION=us-east-2
         kops create cluster \
-          --name={{ cluster_name }} \
-          --dns-zone={{ dns_zone }} \
-          --zones={{ zones }} \
-          --state=s3://{{ kops_state_bucket }} \
-          --node-count={{ node_count }} \
-          --node-size={{ node_size }} \
-          --control-plane-size={{ control_plane_size }} \
+          --name=devcluster.k8s.local \
+          --zones=us-east-2a,us-east-2b \
+          --state=s3://debby-kops-final-state-bucket \
+          --node-count=2 \
+          --node-size=t2.small \
+          --control-plane-size=t2.small \
+          --dns=none \
           --yes
-      environment:
-        KOPS_STATE_STORE: "s3://{{ kops_state_bucket }}"
-        AWS_DEFAULT_REGION: "{{ aws_region }}"
-      become_user: ec2-user
+      args:
+        executable: /bin/bash
