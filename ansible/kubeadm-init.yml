@@ -1,0 +1,32 @@
+- hosts: master
+  become: yes
+  tasks:
+    - name: Initialize Kubernetes Master
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16
+      register: init_output
+      ignore_errors: yes
+
+    - name: Create .kube directory
+      file:
+        path: /home/ec2-user/.kube
+        state: directory
+        mode: 0755
+        owner: ec2-user
+
+    - name: Copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ec2-user/.kube/config
+        remote_src: yes
+        owner: ec2-user
+
+    - name: Save join command to file
+      shell: |
+        echo "{{ init_output.stdout_lines | select('search', 'kubeadm join') | list | join('\n') }}" > /home/ec2-user/join-command.sh
+      when: init_output.rc == 0
+
+    - name: Set execute permission on join-command.sh
+      file:
+        path: /home/ec2-user/join-command.sh
+        mode: '0755'
+        state: file
