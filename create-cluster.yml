@@ -1,11 +1,12 @@
 - name: Create Kubernetes Cluster with Kops
-  hosts: k8s_master
+  hosts: master
   become: yes
   tasks:
-    - name: Set environment variables for Kops and AWS
+    - name: Create Kops Cluster
       shell: |
-        export KOPS_STATE_STORE=s3://debby-kops-final-state-bucket
         export AWS_DEFAULT_REGION=us-east-2
+        export KOPS_STATE_STORE=s3://debby-kops-final-state-bucket
+
         kops create cluster \
           --name=devcluster.k8s.local \
           --zones=us-east-2a,us-east-2b \
